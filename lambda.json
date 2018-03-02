@@ -1,0 +1,1 @@
+{"baudrate": "9600", "sleeptime": "100", "pvsyntax": "PV {:06.3f}", "pcsyntax": "PC {:06.2f}", "port": "/dev/ttyUSB1", "setup_comms": ["ADR 0", "RMT 1", "PV 00.000", "PC 000.00", "OUT 1"]}
