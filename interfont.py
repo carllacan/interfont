@@ -115,7 +115,6 @@ class SupplyFrame (ttk.Labelframe):
                 self.setuptext.insert(tk.END, l + "\n")
             
     def get(self, field):
-        # TODO: find a better way to get the parameters
         fields = {"baudrate":self.baudrate.get(),
                   "sleeptime":self.sleeptime.get(),
                   "pvsyntax":self.pvsyntax.get(),
@@ -130,14 +129,13 @@ class SupplyFrame (ttk.Labelframe):
                                             title = title,
                                             defaultextension = ".json")
 
-        if f != None:
+        if type(f) == str:
             config = {"baudrate":self.get("baudrate"),
                       "sleeptime":self.get("sleeptime"),
                       "pvsyntax":self.get("pvsyntax"),
                       "pcsyntax":self.get("pcsyntax"),
                       "port":self.get("port"),
                       "setup_comms":self.get_setup_comms()}
-            print(f)
             with open(f, 'w') as file:
                 json.dump(config, file) 
             print("saved")
@@ -199,6 +197,13 @@ class ProgFrame (ttk.Labelframe):
                                     command=parent.update_waveform)
         self.cmodesel.grid(row=4, column=0, columnspan=2)
         
+        self.repeatlabel = tk.Label(self, text="Repeticiones")
+        self.repeatlabel.grid(row=5, column = 0)
+        
+        self.repeatentry = tk.Spinbox(self, from_=1, to=1000, width=3)
+        self.repeatentry.grid(row=5,column=1)
+        
+        # TODO canviar consola per un text gran amb bg i tal
         self.consolelabel = tk.Label(self, text="Consola:")
         self.consolelabel.grid(row=0, column = 2)
         self.consoletext = tk.Text(self, width=20,height=10)
@@ -216,6 +221,7 @@ class ProgFrame (ttk.Labelframe):
         self.pwlbutton.config(state=tk.DISABLED)
         self.vmodesel.config(state=tk.DISABLED)
         self.cmodesel.config(state=tk.DISABLED)
+        self.repeatentry.config(state=tk.DISABLED)
         
     def enable(self):
         self.filenameentry.config(state=tk.NORMAL)
@@ -223,9 +229,11 @@ class ProgFrame (ttk.Labelframe):
         self.pwlbutton.config(state=tk.NORMAL)
         self.vmodesel.config(state=tk.NORMAL)
         self.cmodesel.config(state=tk.NORMAL)
+        self.repeatentry.config(state=tk.NORMAL)
         
     def get(self, field):
-        fields = {"currentmode":self.currentmode.get()}
+        fields = {"currentmode":self.currentmode.get(),
+                  "repeat":self.repeatentry.get()}
         return fields[field]
     
     def loadpwl(self):
@@ -436,7 +444,8 @@ class MainFrame (ttk.Frame):
                        setup_comms=setup_comms)
             self.disable()
             self.s.setup()
-            for i in range(1):
+            repeats = int(self.progframe.get("repeat"))
+            for i in range(repeats):
                 self.s.runseries(self.ts, self.vs, cm)
                 time.sleep(self.s.sleep_time)
             print("Execution completed")
@@ -459,7 +468,9 @@ class MainFrame (ttk.Frame):
     def report_callback_exception(self, *args):
         err = traceback.format_exception(*args)
         text = """Ha habido una excepción de Python. El texto de la excepción es el siguiente:
-    {}
+  
+{}
+            
 Si el programa sigue funcionando después de cerrar esta ventana, ignorar este mensaje.
             """.format(err)
         

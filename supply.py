@@ -18,6 +18,8 @@ class Supply:
         self.current_mode = False
         self.serial = serial
         self.stop = False
+        self.v = 0
+        self.c = 0
  
     def setup(self):
         for c in self.setup_comms:
@@ -49,11 +51,15 @@ class Supply:
     
     def PV(self, V):
         # Set the power source to a certain voltage.
-        self.write_command(self.pvsyntax.format(V))
+        if self.v != V:
+            self.write_command(self.pvsyntax.format(V))
+            self.v = V
     
     def PC(self, C):
         # Set the power source to a certain current.
-        self.write_command(self.pcsyntax.format(C))
+        if self.c != C:
+            self.write_command(self.pcsyntax.format(C))
+            self.c = C
     
     def runseries(self, ts, vs, current_mode = False):
         # TODO: make it work without sleeps, but rather checking the time
@@ -72,6 +78,26 @@ class Supply:
                 if self.stop:
                     self.stop= False
                     break
+            self.sleep = True
+        else:
+            print('## Error: Time and voltage series are not equally long. ##')
+
+            
+    def runseries(self, ts, vs, current_mode = False):
+        if len(ts) == len(vs):
+            self.sleep = False
+            i = 0
+            t0 = time.time()
+            dt = time.time() - t0 # elapsed time
+            while dt < ts[-1] and not self.stop:
+                # TODO: que canvie soles si no esta ja?. Afegir self.v i .c
+                if not current_mode:
+                    self.PV(vs[i])
+                else:
+                    self.PC(vs[i])
+                dt = time.time() - t0
+                if dt > ts[i+1]:
+                    i += 1
             self.sleep = True
         else:
             print('## Error: Time and voltage series are not equally long. ##')
